@@ -21,13 +21,22 @@ const getAllVenues = async (req, res) => {
 
 const createVenue = async (req, res) => {
   try {
-    // 
+
     const ownerId = req.user.userId; 
 
+  
     const venueData = {
-      ...req.body,
-      owner_id: ownerId, 
-      status: 'pending' 
+      owner_id: ownerId,                 
+      name: req.body.name,                
+      description: req.body.description,
+      state: req.body.state || 'Lagos',
+      area: req.body.area,
+      address: req.body.address,
+      capacity: req.body.capacity,
+      pricePerDay: req.body.pricePerDay,
+      status: 'pending',                 
+      amenities: req.body.amenities || [],
+      addOnServices: req.body.addOnServices || []
     };
 
     const savedVenue = await VenueService.createNewVenue(venueData);
