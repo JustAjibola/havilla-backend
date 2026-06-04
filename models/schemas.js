@@ -27,7 +27,6 @@ const UserSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-// 🚀 FIXED: Putting the VenueSchema back where it belongs!
 const VenueSchema = new mongoose.Schema({
   owner_id: { 
     type: mongoose.Schema.Types.ObjectId, 
