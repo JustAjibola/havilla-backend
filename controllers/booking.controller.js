@@ -3,8 +3,8 @@ const BookingService = require('../services/booking.service');
 
 const createNewBooking = async (req, res) => {
   try {
-   
-    const plannerId = req.user.id; 
+
+    const plannerId = req.user.userId; 
 
     const userPayload = await User.findById(plannerId);
     if (!userPayload) {
@@ -46,7 +46,8 @@ const confirmBooking = async (req, res) => {
     const { id } = req.params;
     
     const updaterRole = req.user.role; 
-    const updaterId = req.user.id;
+  
+    const updaterId = req.user.userId;
 
     const updatedBooking = await BookingService.confirmBookingSession(id, updaterId, updaterRole);
     

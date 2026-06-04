@@ -21,12 +21,13 @@ const getAllVenues = async (req, res) => {
 
 const createVenue = async (req, res) => {
   try {
-    const ownerId = req.user.id; 
+    // 
+    const ownerId = req.user.userId; 
 
     const venueData = {
       ...req.body,
-      owner_id: ownerId,
-      status: 'pending'
+      owner_id: ownerId, 
+      status: 'pending' 
     };
 
     const savedVenue = await VenueService.createNewVenue(venueData);

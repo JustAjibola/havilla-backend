@@ -3,7 +3,6 @@ const jwt = require('jsonwebtoken');
 
 const register = async (req, res) => {
   try {
-    
     if (!req.body || !req.body.email || !req.body.password || !req.body.name || !req.body.role) {
       return res.status(400).json({ 
         success: false, 
@@ -41,8 +40,9 @@ const login = async (req, res) => {
 
     const user = await AuthService.loginUser(email, password);
     
+  
     const accessToken = jwt.sign(
-      { id: user._id, role: user.role },
+      { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '30d' } 
     );

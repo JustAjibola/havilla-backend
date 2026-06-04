@@ -8,16 +8,35 @@ class BookingService {
   }
 
   async createNewBooking(bookingData, plannerId, userPayload) {
+   
+    const targetVenueId = bookingData.venueId || bookingData.venue;
+
+    if (!targetVenueId) {
+      throw new Error("Validation Error: A valid target venue identification key is required.");
+    }
+
+    const existingConflict = await Booking.findOne({
+      venue: targetVenueId,
+      bookedDate: bookingData.bookedDate,
+      status: { $ne: 'cancelled' } 
+    });
+
+    if (existingConflict) {
+      throw new Error(`Calendar Conflict: This venue is already locked down for ${bookingData.bookedDate}. Please select another date.`);
+    }
 
     const secureBookingPayload = {
-      ...bookingData,
-      planner: plannerId
+      venue: targetVenueId,
+      bookedDate: bookingData.bookedDate,
+      totalAmount: bookingData.totalAmount,
+      planner: plannerId,
+      status: 'pending' 
     };
 
     const savedBooking = await Booking.create(secureBookingPayload);
 
     if (userPayload && userPayload.email) {
-      Venue.findById(bookingData.venue)
+      Venue.findById(targetVenueId)
         .then(venueDetails => {
           const venueName = venueDetails ? venueDetails.name : "Your Selected Venue";
       
@@ -37,7 +56,6 @@ class BookingService {
   }
 
   async confirmBookingSession(bookingId, updaterId, updaterRole) {
-   
     if (updaterRole !== 'admin' && updaterRole !== 'owner') {
       throw new Error("Forbidden Access: Only designated administrators or owners can confirm booking records.");
     }
