@@ -1,26 +1,24 @@
 const AuthService = require('../services/auth.service');
+const jwt = require('jsonwebtoken');
 
-// 1. REGISTER PROFILE ROUTE HANDLER
 const register = async (req, res) => {
   try {
-    // Structural Guard: Ensure body attributes are valid
-    if (!req.body || !req.body.email || !req.body.password || !req.body.name) {
+    
+    if (!req.body || !req.body.email || !req.body.password || !req.body.name || !req.body.role) {
       return res.status(400).json({ 
         success: false, 
-        message: "Bad Request: Missing required field attributes (name, email, password)." 
+        message: "Bad Request: Missing required field attributes (name, email, password, role)." 
       });
     }
 
     const user = await AuthService.registerUser(req.body);
     
-    // Exact response matching your database schema payload
     return res.status(201).json({ 
       success: true, 
-      data: { 
-        id: user._id, 
-        name: user.name, 
-        role: user.role || "user" 
-      } 
+      message: "User context initialized successfully.",
+      id: user._id, 
+      name: user.name, 
+      role: user.role
     });
   } catch (error) {
     return res.status(400).json({ 
@@ -30,7 +28,6 @@ const register = async (req, res) => {
   }
 };
 
-// 2. LOGIN SESSION ROUTE HANDLER
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -44,15 +41,20 @@ const login = async (req, res) => {
 
     const user = await AuthService.loginUser(email, password);
     
+    const accessToken = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '30d' } 
+    );
+    
     return res.status(200).json({
       success: true,
-      message: `Welcome back, ${user.name}!`,
-      user: { 
-        id: user._id, 
-        name: user.name, 
-        email: user.email, 
-        role: user.role || "user" 
-      }
+      message: "Login signature handshake complete.",
+      token: accessToken,
+      id: user._id, 
+      name: user.name, 
+      email: user.email, 
+      role: user.role
     });
   } catch (error) {
     return res.status(401).json({ 
@@ -62,7 +64,6 @@ const login = async (req, res) => {
   }
 };
 
-// 3. INDEX GLOBAL ROSTER ROUTE HANDLER
 const getAllUsers = async (req, res) => {
   try {
     const users = await AuthService.fetchAllUsers();
@@ -78,12 +79,11 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-// Exporting explicitly to match your routes module attachment mapping
 module.exports = { 
   register, 
   login, 
   getAllUsers,
-  registerUser: register, // Alias fallback to intercept routing variations
-  loginUser: login,       // Alias fallback
-  fetchAllUsers: getAllUsers // Alias fallback
+  registerUser: register, 
+  loginUser: login,       
+  fetchAllUsers: getAllUsers 
 };

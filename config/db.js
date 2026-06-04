@@ -2,10 +2,11 @@ const mongoose = require('mongoose');
 
 const connectDatabase = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('MongoDB Connected Successfully: Havilla database is live!');
+    const conn = await mongoose.connect(process.env.MONGO_URI);
+   
+    console.log(`Havilla MongoDB is Live : ${conn.connection.host}`);
   } catch (error) {
-    console.error('Failed to Connect to Database:', error.message);
+    console.error(`Database initialization core failure log: ${error.message}`);
     process.exit(1);
   }
 };

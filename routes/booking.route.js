@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-const { validateBookingPayload } = require('../middleware/validator');
+const { validateBookingInput } = require('../middleware/validator');
+const { authenticateToken } = require('../middleware/auth');
 
 const { 
   createNewBooking, 
@@ -11,7 +12,9 @@ const {
   deleteBooking 
 } = require('../controllers/booking.controller');
 
-router.post('/', validateBookingPayload, createNewBooking);
+router.use(authenticateToken);
+
+router.post('/', validateBookingInput, createNewBooking);
 
 router.get('/', getAllBookings);
 
@@ -21,4 +24,4 @@ router.patch('/:id/confirm', confirmBooking);
 
 router.delete('/:id', deleteBooking);
 
-module.exports = { router };
+module.exports = router;

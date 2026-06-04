@@ -1,63 +1,54 @@
-const { User } = require('../models/schemas'); // 👈 Added User model lookup for emails
+const { User } = require('../models/schemas'); 
 const BookingService = require('../services/booking.service');
 
-// 1. CREATE A NEW BOOKING (WITH EMAIL LOOKUP)
 const createNewBooking = async (req, res) => {
   try {
-    const { planner } = req.body;
+   
+    const plannerId = req.user.id; 
 
-    // Guard Clause: Make sure a planner ID was actually provided
-    if (!planner) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation Error: A planner (User ID) must be specified to create a booking."
-      });
-    }
-
-    // Fetch the planner's user profile from the database to extract their real email address
-    const userPayload = await User.findById(planner);
+    const userPayload = await User.findById(plannerId);
     if (!userPayload) {
       return res.status(404).json({ 
         success: false, 
-        message: "Booking failed: The planner (User ID) provided does not exist in the database." 
+        message: "Booking failed: Authenticated session profile could not be verified in records." 
       });
     }
 
-    // FIX: Pass BOTH req.body data and the fetched user profile into the service layer
-    const booking = await BookingService.createNewBooking(req.body, userPayload);
+    const booking = await BookingService.createNewBooking(req.body, plannerId, userPayload);
     
-    return res.status(201).json({ success: true, data: booking });
+    return res.status(201).json({ 
+      success: true, 
+      message: "Booking request generated successfully.",
+      data: booking 
+    });
   } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+    return res.status(400).json({ 
+      success: false, 
+      message: error.message || "An error occurred while creating booking record parameters." 
+    });
   }
 };
 
-// 2. GET ALL BOOKINGS
 const getAllBookings = async (req, res) => {
   try {
     const bookings = await BookingService.fetchAllBookings();
     return res.status(200).json({ success: true, data: bookings });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ 
+      success: false, 
+      message: error.message || "Internal server exception fetching collection records." 
+    });
   }
 };
 
-// 3. CONFIRM A BOOKING (AUTH-CONSCIOUS APPROACH)
 const confirmBooking = async (req, res) => {
   try {
     const { id } = req.params;
-    const { adminId } = req.body; // Expecting the mobile/frontend app to pass who is confirming this
+    
+    const updaterRole = req.user.role; 
+    const updaterId = req.user.id;
 
-    // Security Gate: Ensure an ID was passed in the request body
-    if (!adminId) {
-      return res.status(401).json({ 
-        success: false, 
-        message: "Unauthorized: An Admin/Owner ID must be provided to confirm bookings." 
-      });
-    }
-
-    // Pass both the booking ID and the admin's ID down to your service layer
-    const updatedBooking = await BookingService.confirmBookingSession(id, adminId);
+    const updatedBooking = await BookingService.confirmBookingSession(id, updaterId, updaterRole);
     
     return res.status(200).json({ 
       success: true, 
@@ -65,33 +56,48 @@ const confirmBooking = async (req, res) => {
       data: updatedBooking 
     });
   } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+    return res.status(400).json({ 
+      success: false, 
+      message: error.message || "Validation Error: Failed to execute status confirmation update." 
+    });
   }
 };
 
-// 4. CANCEL A BOOKING
 const cancelBooking = async (req, res) => {
   try {
     const { id } = req.params;
     const updatedBooking = await BookingService.cancelBookingSession(id);
-    return res.status(200).json({ success: true, message: "Booking cancelled successfully.", data: updatedBooking });
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: "Booking cancelled successfully.", 
+      data: updatedBooking 
+    });
   } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+    return res.status(400).json({ 
+      success: false, 
+      message: error.message || "Validation Error: Failed to modify status parameters." 
+    });
   }
 };
 
-// 5. DELETE A BOOKING
 const deleteBooking = async (req, res) => {
   try {
     const { id } = req.params;
     await BookingService.removeBookingPermanently(id);
-    return res.status(200).json({ success: true, message: "Booking record completely removed from database." });
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: "Booking record completely removed from database." 
+    });
   } catch (error) {
-    return res.status(400).json({ success: false, message: error.message });
+    return res.status(400).json({ 
+      success: false, 
+      message: error.message || "Validation Error: Failed to drop record attributes from engine." 
+    });
   }
 };
 
-// Export all 5 methods out cleanly to your router file
 module.exports = { 
   createNewBooking, 
   getAllBookings, 

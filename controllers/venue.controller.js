@@ -2,19 +2,45 @@ const VenueService = require('../services/venue.service');
 
 const getAllVenues = async (req, res) => {
   try {
-    const venues = await VenueService.fetchAllVenues();
-    res.status(200).json({ success: true, data: venues });
+    const { area } = req.query;
+    
+    let filters = {};
+    if (area) {
+      filters.area = area;
+    }
+
+    const venues = await VenueService.fetchAllVenues(filters);
+    return res.status(200).json({ success: true, data: venues });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ 
+      success: false, 
+      message: error.message || "Internal server exception fetching venue list records." 
+    });
   }
 };
 
 const createVenue = async (req, res) => {
   try {
-    const savedVenue = await VenueService.createNewVenue(req.body);
-    res.status(201).json({ success: true, data: savedVenue });
+    const ownerId = req.user.id; 
+
+    const venueData = {
+      ...req.body,
+      owner_id: ownerId,
+      status: 'pending'
+    };
+
+    const savedVenue = await VenueService.createNewVenue(venueData);
+    
+    return res.status(201).json({ 
+      success: true, 
+      message: "Venue listing initialized and queued for admin approval.",
+      data: savedVenue 
+    });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    return res.status(400).json({ 
+      success: false, 
+      message: error.message || "Validation Error: Failed to create venue profile attributes." 
+    });
   }
 };
 
@@ -22,9 +48,16 @@ const deleteVenue = async (req, res) => {
   try {
     const { id } = req.params;
     await VenueService.deleteExistingVenue(id);
-    res.status(200).json({ success: true, message: "Venue space successfully deleted from Havilla core." });
+    
+    return res.status(200).json({ 
+      success: true, 
+      message: "Venue space successfully deleted from Havilla core." 
+    });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    return res.status(400).json({ 
+      success: false, 
+      message: error.message || "Validation Error: Failed to drop venue entity from engine." 
+    });
   }
 };
 

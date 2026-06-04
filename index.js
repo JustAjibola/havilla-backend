@@ -18,10 +18,10 @@ app.use(cors({
 
 app.use(express.json());
 
-const { router: authRouter } = require('./routes/auth.route');
-const { router: venueRouter } = require('./routes/venue.route');
-const { router: bookingRouter } = require('./routes/booking.route');
-const { router: calendarRouter } = require('./routes/calendar.route');
+const authRouter = require('./routes/auth.route');
+const venueRouter = require('./routes/venue.route');
+const bookingRouter = require('./routes/booking.route');
+const calendarRouter = require('./routes/calendar.route');
 
 app.use('/api/auth', authRouter);
 app.use('/api/venues', venueRouter);
@@ -33,7 +33,7 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Havilla System running on port ${PORT}`);
+  console.log(`Havilla System running securely on port ${PORT}`);
 });
 
 module.exports = app;

@@ -1,9 +1,15 @@
 const express = require('express');
 const router = express.Router();
+
 const { getAllVenues, createVenue, deleteVenue } = require('../controllers/venue.controller');
 
-router.get('/', getAllVenues);
-router.post('/', createVenue);
-router.delete('/:id', deleteVenue);
+const { authenticateToken, requireRole } = require('../middleware/auth');
 
-module.exports = { router };
+router.get('/', getAllVenues);
+
+router.post('/', authenticateToken, requireRole(['owner', 'admin']), createVenue);
+
+router.delete('/:id', authenticateToken, requireRole(['admin']), deleteVenue);
+
+module.exports = router;
+

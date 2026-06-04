@@ -1,14 +1,19 @@
-
 const { Booking } = require('../models/schemas');
 
 class CalendarService {
+
   async checkAvailability(venueId, dateString) {
-    const existingBooking = await Booking.findOne({
-      venue: venueId,
-      bookedDate: dateString,
-      status: { $ne: 'cancelled' }
+
+    const sanitizedVenueId = venueId.toString().trim();
+    const sanitizedDate = dateString.trim();
+
+    const activeBookingConflict = await Booking.findOne({
+      venue: sanitizedVenueId,
+      bookedDate: sanitizedDate,
+      status: { $ne: 'cancelled' } 
     });
-    return existingBooking ? false : true; 
+
+    return activeBookingConflict ? false : true; 
   }
 }
 
